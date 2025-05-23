@@ -14,18 +14,26 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    // @Autowired // COMENTA ESTO
-    // private UserService userService; // COMENTA ESTO
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request) {
-        // System.out.println("Intento de registro recibido (seguridad comentada)"); // Opcional, para depurar
-        return ResponseEntity.ok("Registro temporalmente desactivado para depuración.");
+        try {
+            User user = userService.registerUser(request.getUsername(), request.getPassword());
+            return ResponseEntity.ok("User registered successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
-        // System.out.println("Intento de login recibido (seguridad comentada)"); // Opcional, para depurar
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login temporalmente desactivado para depuración.");
+        String token = userService.authenticateUser(request.getUsername(), request.getPassword());
+        if (token != null) {
+            return ResponseEntity.ok(new AuthResponse(token));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
 }
